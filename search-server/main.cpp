@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <numeric>
+
 
 using namespace std;
 
@@ -82,10 +84,10 @@ public:
     vector<Document> FindTopDocuments(const string& raw_query, DocumentPred document_pred) const {
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, document_pred);
-
+        double epsilon = 1e-6;
         sort(matched_documents.begin(), matched_documents.end(),
-             [](const Document& lhs, const Document& rhs) {
-                 if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+             [epsilon](const Document& lhs, const Document& rhs) {
+                 if (abs(lhs.relevance - rhs.relevance) < epsilon) {
                      return lhs.rating > rhs.rating;
                  } else {
                      return lhs.relevance > rhs.relevance;
@@ -160,10 +162,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
+        int rating_sum = accumulate(ratings.begin(), ratings.end(), 0);
         return rating_sum / static_cast<int>(ratings.size());
     }
 
@@ -410,11 +409,17 @@ void TestRelevantSorting(){
 void TestRating(){
     SearchServer server;
     server.SetStopWords("и в на"s);
-    const vector<int> ratings = {5, -12, 2, 1};
-    server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(20, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {-5, -12, -2, -1});
+    server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
+    server.AddDocument(21, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, 12, 2, 1});
 
     const auto found_docs =  server.FindTopDocuments("ухоженный"s);
-    ASSERT_EQUAL(found_docs[0].rating, -1);
+    vector<int> rating_test;
+    vector<int> rating =  {5, -1, -5};
+    for (const auto & found_doc : found_docs){
+        rating_test.push_back(found_doc.rating); // могу как то сразу достать вектор из структуры типа Document?
+    }
+    ASSERT_EQUAL(rating_test, rating);
 }
 
 // Тест. Фильтрация результатов поиска с использованием предиката, задаваемого пользователем
@@ -446,10 +451,26 @@ void TestCorrectRelevance(){
     search_server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
     search_server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
 
-    const auto count_rel = search_server.FindTopDocuments("пушистый ухоженный кот"s)[0].relevance;
-    double relevance_test = 0.866434;
-    ASSERT_HINT((relevance_test - count_rel) < 0.0001, "Relevance counting ERROR"s);
+    const auto found_docs = search_server.FindTopDocuments("пушистый ухоженный кот"s);
+    vector <double> relevance;
+    vector <double> relevance_test = {0.866434, 0.173287, 0.173287};
+    double epsilon = 1e-6;
+    for (int i =0 ; i< found_docs.size(); ++i){
+        ASSERT_HINT(abs(found_docs[i].relevance -  relevance_test[i]) < epsilon, "Relevance counting ERROR"s);
+    }
+}
 
+// Тест для проверки статуса документа
+
+void TestDocumentsStatus() {
+    SearchServer search_server;
+    search_server.SetStopWords("и в на"s);
+
+    const DocumentStatus status = DocumentStatus::ACTUAL;
+    search_server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
+
+    const auto found_docs = search_server.FindTopDocuments("кот"s, status);
+    ASSERT_EQUAL_HINT(found_docs.size(),  1, "Document status test ERROR"s);
 }
 
 // Функция TestSearchServer является точкой входа для запуска тестов
@@ -460,6 +481,7 @@ void TestSearchServer() {
     RUN_TEST(TestRating);
     RUN_TEST(TestPredicate);
     RUN_TEST(TestCorrectRelevance);
+    RUN_TEST(TestDocumentsStatus);
     // Не забудьте вызывать остальные тесты здесь
 }
 
