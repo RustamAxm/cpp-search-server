@@ -13,6 +13,7 @@
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const double EPSILON = 1e-6;
 //Считывание из консоли
 string ReadLine() {
     string s;
@@ -62,6 +63,7 @@ enum class DocumentStatus {
 // Сам класс поисковика
 class SearchServer {
 public:
+
     void SetStopWords(const string& text) {
         for (const string& word : SplitIntoWords(text)) {
             stop_words_.insert(word);
@@ -84,10 +86,9 @@ public:
     vector<Document> FindTopDocuments(const string& raw_query, DocumentPred document_pred) const {
         const Query query = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query, document_pred);
-        double epsilon = 1e-6;
         sort(matched_documents.begin(), matched_documents.end(),
-             [epsilon](const Document& lhs, const Document& rhs) {
-                 if (abs(lhs.relevance - rhs.relevance) < epsilon) {
+             [](const Document& lhs, const Document& rhs) {
+                 if (abs(lhs.relevance - rhs.relevance) < EPSILON) {
                      return lhs.rating > rhs.rating;
                  } else {
                      return lhs.relevance > rhs.relevance;
@@ -454,9 +455,8 @@ void TestCorrectRelevance(){
     const auto found_docs = search_server.FindTopDocuments("пушистый ухоженный кот"s);
     vector <double> relevance;
     vector <double> relevance_test = {0.866434, 0.173287, 0.173287};
-    double epsilon = 1e-6;
     for (int i =0 ; i< found_docs.size(); ++i){
-        ASSERT_HINT(abs(found_docs[i].relevance -  relevance_test[i]) < epsilon, "Relevance counting ERROR"s);
+        ASSERT_HINT(abs(found_docs[i].relevance -  relevance_test[i]) < EPSILON, "Relevance counting ERROR"s);
     }
 }
 
@@ -466,11 +466,15 @@ void TestDocumentsStatus() {
     SearchServer search_server;
     search_server.SetStopWords("и в на"s);
 
-    const DocumentStatus status = DocumentStatus::ACTUAL;
     search_server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
+    search_server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::IRRELEVANT, {7, 2, 7});
+    search_server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::REMOVED, {5, -12, 2, 1});
+    search_server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
 
-    const auto found_docs = search_server.FindTopDocuments("кот"s, status);
-    ASSERT_EQUAL_HINT(found_docs.size(),  1, "Document status test ERROR"s);
+    ASSERT_EQUAL_HINT(search_server.FindTopDocuments("кот"s, DocumentStatus::ACTUAL).size(),  1, "Document status test ERROR for ACTUAL"s);
+    ASSERT_EQUAL_HINT(search_server.FindTopDocuments("хвост"s, DocumentStatus::IRRELEVANT).size(),  1, "Document status test ERROR for IRRELEVANT"s);
+    ASSERT_EQUAL_HINT(search_server.FindTopDocuments("пес"s, DocumentStatus::REMOVED).size(),  0, "Document status test ERROR for REMOVED"s);
+    ASSERT_EQUAL_HINT(search_server.FindTopDocuments("скворец"s, DocumentStatus::BANNED).size(),  1, "Document status test ERROR for BANNED"s);
 }
 
 // Функция TestSearchServer является точкой входа для запуска тестов
