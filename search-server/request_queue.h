@@ -9,21 +9,11 @@
 
 class RequestQueue {
 public:
-    explicit RequestQueue(const SearchServer& search_server) :
-            search_server_(const_cast<SearchServer &>(search_server)),
-            current_time_(0),
-            no_results_request_(0)
-    {
-        // напишите реализацию
-    }
+    explicit RequestQueue(const SearchServer& search_server);
+
     // сделаем "обёртки" для всех методов поиска, чтобы сохранять результаты для нашей статистики
     template <typename DocumentPredicate>
-    std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
-        // напишите реализацию
-        const auto top_documents = search_server_.FindTopDocuments(raw_query, document_predicate);
-        AddRequests(top_documents.size());
-        return top_documents;
-    }
+    std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate);
 
     std::vector<Document> AddFindRequest(const std::string& raw_query, DocumentStatus status);
 

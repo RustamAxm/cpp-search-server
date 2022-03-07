@@ -4,11 +4,11 @@
 
 #include "read_input_fuctions.h"
 
-    std::string ReadLine() {
-        std::string s;
-        getline(std::cin, s);
-        return s;
-    }
+std::string ReadLine() {
+    std::string s;
+    getline(std::cin, s);
+    return s;
+}
 
 
 

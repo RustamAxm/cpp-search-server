@@ -4,6 +4,22 @@
 
 #include "request_queue.h"
 
+RequestQueue::RequestQueue(const SearchServer& search_server) :
+        search_server_(const_cast<SearchServer &>(search_server)),
+        current_time_(0),
+        no_results_request_(0)
+{
+    // напишите реализацию
+}
+
+template <typename DocumentPredicate>
+std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
+    // напишите реализацию
+    const auto top_documents = search_server_.FindTopDocuments(raw_query, document_predicate);
+    AddRequests(top_documents.size());
+    return top_documents;
+}
+
 std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentStatus status) {
     // напишите реализацию
     const auto top_documents = search_server_.FindTopDocuments(raw_query, status);
