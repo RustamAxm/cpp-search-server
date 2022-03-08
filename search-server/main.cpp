@@ -1,5 +1,5 @@
 
-#include "read_input_fuctions.h"
+#include "read_input_functions.h"
 #include "search_server.h"
 #include "paginator.h"
 #include "request_queue.h"
@@ -24,7 +24,7 @@ using namespace std;
 //        cout << *page << endl;
 //        cout << "Page break"s << endl;
 //    }
-//
+//    return 0;
 //}
 
 int main() {

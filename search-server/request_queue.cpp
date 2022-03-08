@@ -12,14 +12,6 @@ RequestQueue::RequestQueue(const SearchServer& search_server) :
     // напишите реализацию
 }
 
-template <typename DocumentPredicate>
-std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
-    // напишите реализацию
-    const auto top_documents = search_server_.FindTopDocuments(raw_query, document_predicate);
-    AddRequests(top_documents.size());
-    return top_documents;
-}
-
 std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentStatus status) {
     // напишите реализацию
     const auto top_documents = search_server_.FindTopDocuments(raw_query, status);
