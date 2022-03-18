@@ -8,6 +8,7 @@ SearchServer::SearchServer(const std::string& stop_words_text)
         : SearchServer(SplitIntoWords(stop_words_text)) {
 }
 
+
 void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {
     if (document_id < 0 || documents_.count(document_id)){
         throw std::invalid_argument("id is less zero or id is present, ID: " + std::to_string(document_id));
@@ -23,6 +24,14 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
                                ComputeAverageRating(ratings),
                                status
                        });
+
+    std::set<std::string> unique_words(words.begin(), words.end());
+    for (const std::string word : unique_words)
+    {
+        document_id_to_word_freqs_[document_id].insert({word,
+                                                        ComputeAverageRating(ratings)});
+    }
+
     document_ids_.push_back(document_id);
 }
 
@@ -38,12 +47,14 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
-int SearchServer::GetDocumentId(int index) const {
-    if(index < 0 && index > documents_.size()-1){
-        throw std::out_of_range("Index is out of range");
-    }
-    return document_ids_.at(index);
+std::vector<int>::const_iterator SearchServer::begin() const{
+    return document_ids_.begin();
 }
+
+std::vector<int>::const_iterator SearchServer::end() const{
+    return document_ids_.end();
+}
+
 
 std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument(const std::string& raw_query, int document_id) const {
     const Query query = ParseQuery(raw_query);
@@ -66,6 +77,36 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
         }
     }
     return {matched_words, documents_.at(document_id).status};
+}
+
+const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const{
+    static std::map<std::string, double> word_frequencies;
+    for (const auto& [key, value] : word_to_document_freqs_) {
+        auto it = value.find(document_id);
+        if (it != value.end()) {
+            word_frequencies[key] = it->first;
+        }
+    }
+    return word_frequencies;
+}
+
+void SearchServer::RemoveDocument(int document_id){
+    auto found  = std::find(document_ids_.begin(), document_ids_.end(), document_id);
+    if (found != document_ids_.end()){
+//        for (const auto&[key, value]: word_to_document_freqs_) {
+//            auto it = value.find(document_id);
+//            if (it != value.end()) {
+//                word_to_document_freqs_.erase(key);
+//            }
+//        }
+        for (auto [document, freqs] : document_id_to_word_freqs_.at(document_id))
+        {
+            word_to_document_freqs_.erase(document);
+        }
+        document_id_to_word_freqs_.erase(document_id);
+        documents_.erase(document_id);
+        document_ids_.erase(found);
+    }
 }
 
 bool SearchServer::IsValidWord(const std::string& word) {
