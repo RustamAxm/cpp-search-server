@@ -44,7 +44,7 @@ template <typename Iterator>
 class Paginator {
 public:
     Paginator(Iterator begin, Iterator end, size_t page_size) {
-        if (distance(begin, end) < 0 or page_size==0){
+        if (distance(begin, end) < 0 || page_size == 0){
             throw std::invalid_argument("Invalid distance in range");
         }
         else{
@@ -80,12 +80,6 @@ auto Paginate(const Container& c, size_t page_size) {
     return Paginator(begin(c), end(c), page_size);
 }
 
-std::ostream& operator<<(std::ostream& out, const Document& doc) {
-    out << "{ document_id = " << doc.id
-        << ", relevance = " << doc.relevance
-        << ", rating = " << doc.rating
-        << " }";
-    return out;
-}
+
 
 

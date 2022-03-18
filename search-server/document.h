@@ -2,6 +2,7 @@
 // Created by rustam on 06.03.2022.
 //
 #pragma once
+#include <iostream>
 
 // Структура документа
 struct Document {
@@ -20,4 +21,6 @@ enum class DocumentStatus {
     BANNED,
     REMOVED,
 };
+
+std::ostream& operator<<(std::ostream& out, const Document& doc);
 

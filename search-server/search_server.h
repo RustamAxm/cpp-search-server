@@ -40,9 +40,9 @@ public:
     int GetDocumentCount() const;
 
     //int GetDocumentId(int index) const;
-    std::vector<int>::const_iterator begin() const;
+    std::set<int>::const_iterator begin() const;
 
-    std::vector<int>::const_iterator end() const;
+    std::set<int>::const_iterator end() const;
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
 
@@ -55,10 +55,11 @@ private:
         int rating;
         DocumentStatus status;
     };
+
     std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
-    std::vector<int> document_ids_;
+    std::set<int> document_ids_;
     std::map<int, std::map<std::string, double>> document_id_to_word_freqs_;
 
     static bool IsValidWord(const std::string& word);
