@@ -16,10 +16,10 @@ void SearchServer::AddDocument(int document_id, const std::string& document, Doc
     const std::vector<std::string> words = SplitIntoWordsNoStop(document);
     const double inv_word_count = 1.0 / words.size();
     const int computed_rating = ComputeAverageRating(ratings);
+
     for (const std::string& word : words) {
         word_to_document_freqs_[word][document_id] += inv_word_count;
-        document_id_to_word_freqs_[document_id].insert({word,
-                                                        computed_rating});
+        document_id_to_word_freqs_[document_id][word] += inv_word_count;
     }
     documents_.emplace(document_id,
                        DocumentData{computed_rating,
@@ -73,7 +73,15 @@ std::tuple<std::vector<std::string>, DocumentStatus> SearchServer::MatchDocument
 }
 
 const std::map<std::string, double>& SearchServer::GetWordFrequencies(int document_id) const{
-    return document_id_to_word_freqs_.at(document_id);
+    static std::map<std::string, double> words_frequencies;
+    if (!words_frequencies.empty()){
+        words_frequencies.clear();
+    }
+    if (document_id < 0 || !documents_.count(document_id)){
+        return words_frequencies;
+    }
+    words_frequencies = document_id_to_word_freqs_.at(document_id);
+    return words_frequencies;
 }
 
 void SearchServer::RemoveDocument(int document_id){

@@ -20,7 +20,7 @@ void AddDocument(SearchServer& search_server, int document_id, const string& doc
 
 int main() {
     SearchServer search_server("and with"s);
-
+    //LOG_DURATION_STREAM("jnacjs", cout);
     AddDocument(search_server, 1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, {7, 2, 7});
     AddDocument(search_server, 2, "funny pet with curly hair"s, DocumentStatus::ACTUAL, {1, 2});
 

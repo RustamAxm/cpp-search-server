@@ -16,10 +16,7 @@ public:
     // с помощью using для удобства
     using Clock = std::chrono::steady_clock;
 
-    explicit LogDuration(const std::string operation_name) : operation_name_(operation_name){
-    }
-
-    explicit LogDuration(const std::string operation_name, std::ostream& out) : operation_name_(operation_name),
+    explicit LogDuration(const std::string operation_name, std::ostream& out=std::cerr) : operation_name_(operation_name),
                                                                                 out_(out){
     }
 
@@ -37,5 +34,5 @@ public:
 private:
     const Clock::time_point start_time_ = Clock::now();
     const std::string operation_name_;
-    std::ostream& out_=std::cerr;
+    std::ostream& out_;
 };
