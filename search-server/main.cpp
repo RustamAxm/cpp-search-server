@@ -14,6 +14,7 @@ using namespace std;
 int main(){
 //    Test_ProcessQueries();
     Test_ProcessQueriesJoined();
+    Test_RemoveDocument();
     return 0;
 }
 

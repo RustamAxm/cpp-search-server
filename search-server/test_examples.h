@@ -11,6 +11,16 @@
 #include "process_queries.h"
 #include "search_server.h"
 
+#include "search_server.h"
+
+#include <execution>
+#include <iostream>
+#include <random>
+#include <string>
+#include <vector>
+
+#include "log_duration.h"
+
 using namespace std;
 
 string GenerateWord(mt19937& generator, int max_length) {
@@ -130,4 +140,79 @@ void Test_ProcessQueriesJoined(){
     for (const Document& document : ProcessQueriesJoined(search_server, queries)) {
         cout << "Document "s << document.id << " matched with relevance "s << document.relevance << endl;
     }
+}
+
+
+template <typename ExecutionPolicy>
+void Test(string_view mark, SearchServer search_server, ExecutionPolicy&& policy) {
+    LOG_DURATION(mark);
+    const int document_count = search_server.GetDocumentCount();
+    for (int id = 0; id < document_count; ++id) {
+        search_server.RemoveDocument(policy, id);
+    }
+    cout << search_server.GetDocumentCount() << endl;
+}
+
+#define TEST1(mode) Test(#mode, search_server, execution::mode)
+
+void Test_RemoveDocument() {
+    SearchServer search_server("and with"s);
+
+    int id = 0;
+    for (
+        const string& text : {
+            "funny pet and nasty rat"s,
+            "funny pet with curly hair"s,
+            "funny pet and not very nasty rat"s,
+            "pet with rat and rat and rat"s,
+            "nasty rat with curly hair"s,
+    }
+            ) {
+        search_server.AddDocument(++id, text, DocumentStatus::ACTUAL, {1, 2});
+    }
+
+    const string query = "curly and funny"s;
+
+    auto report = [&search_server, &query] {
+        cout << search_server.GetDocumentCount() << " documents total, "s
+             << search_server.FindTopDocuments(query).size() << " documents for query ["s << query << "]"s << endl;
+    };
+
+    report();
+    // однопоточная версия
+    search_server.RemoveDocument(5);
+    report();
+    // однопоточная версия
+    search_server.RemoveDocument(execution::seq, 1);
+    report();
+    // многопоточная версия
+    search_server.RemoveDocument(execution::par,  2);
+    report();
+
+
+
+     {
+        mt19937 generator;
+
+        const auto dictionary = GenerateDictionary(generator, 10'000, 25);
+        const auto documents = GenerateQueries(generator, dictionary, 10'000, 100);
+
+        {
+            SearchServer search_server(dictionary[0]);
+            for (size_t i = 0; i < documents.size(); ++i) {
+                search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
+            }
+
+            TEST1(seq);
+        }
+        {
+            SearchServer search_server(dictionary[0]);
+            for (size_t i = 0; i < documents.size(); ++i) {
+                search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
+            }
+
+            TEST1(par);
+        }
+    }
+
 }

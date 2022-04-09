@@ -4,10 +4,10 @@
 
 #include "search_server.h"
 
+
 SearchServer::SearchServer(const std::string& stop_words_text)
         : SearchServer(SplitIntoWords(stop_words_text)) {
 }
-
 
 void SearchServer::AddDocument(int document_id, const std::string& document, DocumentStatus status, const std::vector<int>& ratings) {
     if (document_id < 0 || documents_.count(document_id)){
@@ -85,19 +85,58 @@ const std::map<std::string, double>& SearchServer::GetWordFrequencies(int docume
 }
 
 void SearchServer::RemoveDocument(int document_id){
-    auto found  = std::find(document_ids_.begin(), document_ids_.end(), document_id);
-    if (found != document_ids_.end()){
-        for (auto [document, freqs] : document_id_to_word_freqs_.at(document_id)){
-            word_to_document_freqs_.erase(document);
-        }
-        document_id_to_word_freqs_.erase(document_id);
+    RemoveDocument(std::execution::seq, document_id);
+}
+
+void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy, int document_id){
+    const std::map<std::string, double>& words_freqs(document_id_to_word_freqs_.at(document_id));
+    if(!words_freqs.empty()){
+        std::vector<const std::string*> words{words_freqs.size(),nullptr};
+
+        transform(policy,
+                  words_freqs.begin(), words_freqs.end(),
+                  words.begin(),
+                  [](const auto& wf){
+                      return &wf.first;
+                  });
+
+        std::for_each(policy,
+                      words.begin(), words.end(),
+                      [this, document_id](const std::string* item){
+                        word_to_document_freqs_[*item].erase(document_id);
+                        });
+
         documents_.erase(document_id);
-        document_ids_.erase(found);
+        document_ids_.erase(document_id);
+        document_id_to_word_freqs_.erase(document_id);
+    }
+}
+
+void SearchServer::RemoveDocument(const std::execution::sequenced_policy& policy, int document_id){
+    const std::map<std::string, double>& words_freqs(document_id_to_word_freqs_.at(document_id));
+    if(!words_freqs.empty()){
+        std::vector<const std::string*> words{words_freqs.size(),nullptr};
+
+        transform(policy,
+                  words_freqs.begin(), words_freqs.end(),
+                  words.begin(),
+                  [](const auto& wf){
+                      return &wf.first;
+                  });
+
+        std::for_each(policy,
+                      words.begin(), words.end(),
+                      [this, document_id](const std::string* item){
+                          word_to_document_freqs_[*item].erase(document_id);
+                      });
+
+        documents_.erase(document_id);
+        document_ids_.erase(document_id);
+        document_id_to_word_freqs_.erase(document_id);
     }
 }
 
 bool SearchServer::IsValidWord(const std::string& word) {
-    // A valid word must not contain special characters
     return none_of(word.begin(), word.end(), [](char c) {
         return c >= '\0' && c < ' ';
     });

@@ -12,11 +12,13 @@
 #include <numeric>
 #include <cmath>
 #include <iostream>
+#include <execution>
+
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
 
-// Сам класс поисковика
+
 class SearchServer {
 public:
     // You can refer to this constant as SearchServer::INVALID_DOCUMENT_ID
@@ -45,6 +47,8 @@ public:
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 
     void RemoveDocument(int document_id);
+    void RemoveDocument(const std::execution::parallel_policy& policy,int document_id);
+    void RemoveDocument(const std::execution::sequenced_policy& policy, int document_id);
 
 private:
     struct DocumentData {
@@ -52,7 +56,7 @@ private:
         DocumentStatus status;
     };
 
-    std::set<std::string> stop_words_;
+    const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
     std::set<int> document_ids_;
@@ -88,6 +92,7 @@ private:
     std::vector<Document> FindAllDocuments(const Query& query, DocumentPredicate document_predicate) const;
 
 };
+
 
 template <typename StringContainer>
 SearchServer::SearchServer(const StringContainer& stop_words)

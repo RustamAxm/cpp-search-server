@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+
 std::vector<std::string> SplitIntoWords(const std::string& text);
 
 template <typename StringContainer>
