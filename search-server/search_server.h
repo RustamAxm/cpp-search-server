@@ -43,6 +43,10 @@ public:
     std::set<int>::const_iterator end() const;
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string& raw_query, int document_id) const;
+    std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::execution::parallel_policy& policy,
+                                                                       const std::string& raw_query, int document_id) const;
+    std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::execution::sequenced_policy& policy,
+                                                                       const std::string& raw_query, int document_id) const;
 
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
 
@@ -77,6 +81,7 @@ private:
     };
 
     QueryWord ParseQueryWord(const std::string& text) const;
+    QueryWord ParseQueryWord2(const std::string& text) const;
 
     struct Query {
         std::set<std::string> plus_words;
@@ -84,8 +89,8 @@ private:
     };
 
     Query ParseQuery(const std::string& text) const;
+    Query ParseQuery(const std::execution::parallel_policy& policy, const std::string& text) const;
 
-    // Existence required
     double ComputeWordInverseDocumentFreq(const std::string& word) const;
 
     template <typename DocumentPredicate>
