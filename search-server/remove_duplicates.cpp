@@ -5,11 +5,11 @@
 #include "remove_duplicates.h"
 
 void RemoveDuplicates(SearchServer& search_server){
-    std::map<std::set<std::string>, int> word_to_document_freqs;
+    std::map<std::set<std::string_view>, int> word_to_document_freqs;
     std::set<int> documents_to_delete;
     for (auto document_id : search_server){
-        std::set<std::string> words;
-        std::map<std::string, double> document_freq = search_server.GetWordFrequencies(document_id);
+        std::set<std::string_view> words;
+        std::map<std::string_view , double> document_freq = search_server.GetWordFrequencies(document_id);
 
         std::transform(document_freq.begin(), document_freq.end(),
                        std::inserter(words, std::end(words)),

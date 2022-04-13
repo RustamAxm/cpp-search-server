@@ -9,10 +9,12 @@
 
 //#include "test_examples.h"
 #include "test_mach_doc.h"
+//#include "unit_test.h"
 
 using namespace std;
 
 int main(){
+//    TestSearchServer();
 //    Test_ProcessQueries();
 //    Test_ProcessQueriesJoined();
 //    Test_RemoveDocument();
