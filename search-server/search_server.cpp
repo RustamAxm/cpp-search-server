@@ -39,10 +39,34 @@ void SearchServer::AddDocument(int document_id,
     document_ids_.insert(document_id);
 }
 
+std::vector<Document> SearchServer::FindTopDocuments(const std::execution::sequenced_policy& policy,
+                                                     std::string_view raw_query, DocumentStatus status) const {
+    return SearchServer::FindTopDocuments(std::execution::seq, raw_query,
+                                          [status](int document_id, DocumentStatus new_status,  int rating)
+                                          { return new_status == status; });
+}
+
+std::vector<Document> SearchServer::FindTopDocuments(const std::execution::parallel_policy& policy,
+                                                     std::string_view raw_query, DocumentStatus status) const {
+    return SearchServer::FindTopDocuments(std::execution::par, raw_query,
+                                          [status](int document_id, DocumentStatus new_status,  int rating)
+                                          { return new_status == status; });
+}
+
 std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query, DocumentStatus status) const {
     return SearchServer::FindTopDocuments(raw_query,
                                           [status](int document_id, DocumentStatus new_status,  int rating)
                                           { return new_status == status; });
+}
+
+std::vector<Document> SearchServer::FindTopDocuments(const std::execution::sequenced_policy& policy,
+                                                     std::string_view raw_query) const {
+    return SearchServer::FindTopDocuments(std::execution::seq, raw_query, DocumentStatus::ACTUAL);
+}
+
+std::vector<Document> SearchServer::FindTopDocuments(const std::execution::parallel_policy& policy,
+                                                     std::string_view raw_query) const {
+    return SearchServer::FindTopDocuments(std::execution::par, raw_query, DocumentStatus::ACTUAL);
 }
 
 std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query) const {
@@ -68,7 +92,7 @@ SearchServer::MatchDocument(const std::string_view raw_query, int document_id) c
 }
 
 std::tuple<std::vector<std::string_view>, DocumentStatus>
-SearchServer::MatchDocument(std::execution::sequenced_policy,
+SearchServer::MatchDocument(const std::execution::sequenced_policy& policy,
                             const std::string_view raw_query, int document_id) const{
     if (documents_.count(document_id) == 0) {
         throw std::out_of_range("No document with id ");
@@ -103,7 +127,7 @@ SearchServer::MatchDocument(std::execution::sequenced_policy,
 }
 
 std::tuple<std::vector<std::string_view>, DocumentStatus>
-SearchServer::MatchDocument(std::execution::parallel_policy,
+SearchServer::MatchDocument(const std::execution::parallel_policy& policy,
                             const std::string_view raw_query, int document_id) const{
 
     if (documents_.count(document_id) == 0) {
