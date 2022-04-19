@@ -17,7 +17,7 @@ void SearchServer::AddDocument(int document_id,
                                std::string_view document,
                                DocumentStatus status,
                                const std::vector<int>& ratings) {
-    if (document_id < 0 || documents_.count(document_id)){
+    if (document_id < 0 || documents_.count(document_id)) {
         throw std::invalid_argument("id is less zero or id is present, ID: " + std::to_string(document_id));
     }
 
@@ -77,11 +77,11 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
-std::set<int>::const_iterator SearchServer::begin() const{
+std::set<int>::const_iterator SearchServer::begin() const {
     return document_ids_.begin();
 }
 
-std::set<int>::const_iterator SearchServer::end() const{
+std::set<int>::const_iterator SearchServer::end() const {
     return document_ids_.end();
 }
 
@@ -93,7 +93,7 @@ SearchServer::MatchDocument(const std::string_view raw_query, int document_id) c
 
 std::tuple<std::vector<std::string_view>, DocumentStatus>
 SearchServer::MatchDocument(const std::execution::sequenced_policy& policy,
-                            const std::string_view raw_query, int document_id) const{
+                            const std::string_view raw_query, int document_id) const {
     if (documents_.count(document_id) == 0) {
         throw std::out_of_range("No document with id ");
     }
@@ -128,7 +128,7 @@ SearchServer::MatchDocument(const std::execution::sequenced_policy& policy,
 
 std::tuple<std::vector<std::string_view>, DocumentStatus>
 SearchServer::MatchDocument(const std::execution::parallel_policy& policy,
-                            const std::string_view raw_query, int document_id) const{
+                            const std::string_view raw_query, int document_id) const {
 
     if (documents_.count(document_id) == 0) {
         throw std::out_of_range("No document with id ");
@@ -164,25 +164,25 @@ SearchServer::MatchDocument(const std::execution::parallel_policy& policy,
     return { matched_words, status };
 }
 
-const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const{
+const std::map<std::string_view, double>& SearchServer::GetWordFrequencies(int document_id) const {
     static std::map<std::string_view, double> words_frequencies;
     if (!words_frequencies.empty()){
         words_frequencies.clear();
     }
-    if (document_id < 0 || !documents_.count(document_id)){
+    if (document_id < 0 || !documents_.count(document_id)) {
         return words_frequencies;
     }
     words_frequencies = document_id_to_word_freqs_.at(document_id);
     return words_frequencies;
 }
 
-void SearchServer::RemoveDocument(int document_id){
+void SearchServer::RemoveDocument(int document_id) {
     RemoveDocument(std::execution::seq, document_id);
 }
 
-void SearchServer::RemoveDocument(const std::execution::sequenced_policy& policy, int document_id){
+void SearchServer::RemoveDocument(const std::execution::sequenced_policy& policy, int document_id) {
     const std::map<std::string_view , double>& words_freqs(document_id_to_word_freqs_.at(document_id));
-    if(!words_freqs.empty()){
+    if(!words_freqs.empty()) {
         std::vector<std::string_view> words{words_freqs.size()};
 
         transform(policy,
@@ -204,9 +204,9 @@ void SearchServer::RemoveDocument(const std::execution::sequenced_policy& policy
     }
 }
 
-void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy, int document_id){
+void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy, int document_id) {
     const std::map<std::string_view, double>& words_freqs(document_id_to_word_freqs_.at(document_id));
-    if(!words_freqs.empty()){
+    if(!words_freqs.empty()) {
         std::vector<std::string_view> words{words_freqs.size()};
 
         transform(policy,
@@ -218,7 +218,7 @@ void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy,
 
         std::for_each(policy,
                       words.begin(), words.end(),
-                      [this, document_id](std::string_view item){
+                      [this, document_id](std::string_view item) {
                         word_to_document_freqs_[item].erase(document_id);
                         });
 
@@ -279,7 +279,7 @@ SearchServer::QueryWord SearchServer::ParseQueryWord(std::string_view word ) con
 }
 
 std::vector<std::string_view> SearchServer::SortUniq(const std::execution::sequenced_policy& policy,
-                                                     std::vector<std::string_view>& container) const{
+                                                     std::vector<std::string_view>& container) const {
 
     std::sort(policy, container.begin(), container.end());
     auto words_end = std::unique(policy, container.begin(), container.end());

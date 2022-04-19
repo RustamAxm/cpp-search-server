@@ -149,7 +149,8 @@ SearchServer::SearchServer(const StringContainer& stop_words) {
 }
 
 template <typename DocumentPredicate>
-std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query, DocumentPredicate document_predicate) const{
+std::vector<Document> SearchServer::FindTopDocuments(std::string_view raw_query,
+                                                     DocumentPredicate document_predicate) const {
     return SearchServer::FindTopDocuments(std::execution::seq,
                                           raw_query,
                                           document_predicate);

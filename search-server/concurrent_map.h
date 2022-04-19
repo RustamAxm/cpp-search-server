@@ -15,7 +15,7 @@ template <typename Key, typename Value>
 class ConcurrentMap {
 
 private:
-    struct MutexMap{
+    struct MutexMap {
         std::mutex m_;
         std::map<Key, Value> map_;
     };
@@ -34,21 +34,21 @@ public:
         }
     };
 
-    explicit ConcurrentMap(size_t bucket_count) : vector_(bucket_count){
+    explicit ConcurrentMap(size_t bucket_count) : vector_(bucket_count) {
     }
 
-    Access operator[](const Key& key){
+    Access operator[](const Key& key) {
         auto& part = vector_[static_cast<uint32_t>(key) % vector_.size()];
         return {key, part};
     }
 
-    void Erase(const Key& key){
+    void Erase(const Key& key) {
         auto& [mutex, map] = vector_[static_cast<uint32_t>(key) % vector_.size()];
         std::lock_guard guard(mutex);
         map.erase(key);
     }
 
-    std::map<Key, Value> BuildOrdinaryMap(){
+    std::map<Key, Value> BuildOrdinaryMap() {
         std::map<Key, Value> result;
         for (auto& [mutex, map] : vector_) {
             std::lock_guard guard(mutex);

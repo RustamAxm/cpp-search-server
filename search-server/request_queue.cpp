@@ -31,7 +31,7 @@ int RequestQueue::GetNoResultRequests() const {
     return no_results_request_;
 }
 
-void RequestQueue::AddRequests(int top_doc_num){
+void RequestQueue::AddRequests(int top_doc_num) {
     ++current_time_;
     //удаление устаревших результаов
     for (;!requests_.empty() && min_in_day_ <= current_time_ - requests_.front().timestamp;

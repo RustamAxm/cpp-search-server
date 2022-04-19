@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int main(){
+int main() {
     // unit tests
     TestSearchServer();
     // test "test_RemoveDocument.h"
