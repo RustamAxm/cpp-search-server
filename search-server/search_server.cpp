@@ -107,7 +107,8 @@ SearchServer::MatchDocument(const std::execution::sequenced_policy& policy,
             continue;
         }
         if (word_to_document_freqs_.at(word).count(document_id)) {
-            return { {}, status };
+            std::vector<std::string_view> tmp = {};
+            return { tmp, status };
         }
     }
 
@@ -148,7 +149,8 @@ SearchServer::MatchDocument(const std::execution::parallel_policy& policy,
                     query.minus_words.begin(),
                     query.minus_words.end(),
                     word_checker)) {
-        return { {}, status };
+        std::vector<std::string_view> tmp = {};
+        return { tmp, status };
     }
 
     std::vector<std::string_view> matched_words(query.plus_words.size());
